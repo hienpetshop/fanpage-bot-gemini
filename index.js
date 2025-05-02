@@ -55,8 +55,9 @@ app.post("/webhook", async (req, res) => {
             const base64Image = Buffer.from(imageBuffer.data, 'binary').toString('base64');
 
             promptParts.push({
-              text: `Bạn là người bán hàng online của fanpage Lộc Pet Shop. Trả lời cực ngắn gọn (1 câu, 30 từ), thân thiện, đúng kiểu người thật.
-
+              text: `Bạn là người bán hàng online của fanpage Lộc Pet Shop. Trả lời tự nhiên, giống nhân viên tư vấn trên Facebook. Văn phong ngắn gọn, dễ hiểu, như đang nhắn tin với khách.
+Tập trung đúng thông tin khách cần, không dài dòng, không nói thừa.
+Không dùng văn vở lịch sự quá mức. Tránh kiểu “chào bạn”, “cảm ơn”, v.v.
 Dưới đây là thông tin nội bộ cửa hàng:
 ${noidung_txt}
 
@@ -71,8 +72,9 @@ Lời nhắn khách: ${textMessage}`
             });
           } else if (textMessage) {
             promptParts.push({
-              text: `Bạn là người bán hàng online của fanpage Lộc Pet Shop. Trả lời cực ngắn gọn (1 câu, 30 từ), thân thiện, đúng kiểu người thật.
-
+              text: `Bạn là người bán hàng online của fanpage Lộc Pet Shop. Trả lời tự nhiên, giống nhân viên tư vấn trên Facebook. Văn phong ngắn gọn, dễ hiểu, như đang nhắn tin với khách.
+Tập trung đúng thông tin khách cần, không dài dòng, không nói thừa.
+Không dùng văn vở lịch sự quá mức. Tránh kiểu “chào bạn”, “cảm ơn”, v.v.
 Dưới đây là thông tin nội bộ cửa hàng:
 ${noidung_txt}
 
