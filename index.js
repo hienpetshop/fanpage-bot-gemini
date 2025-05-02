@@ -38,46 +38,64 @@ app.post("/webhook", async (req, res) => {
       const webhook_event = entry.messaging[0];
       const sender_psid = webhook_event.sender.id;
 
-      if (webhook_event.message && webhook_event.message.text) {
-        const userMessage = webhook_event.message.text;
-        console.log("💬 Tin nhắn khách:", userMessage);
+      if (webhook_event.message) {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const noidung_txt = fs.readFileSync("noidung.txt", "utf8");
+
+        const textMessage = webhook_event.message.text || "";
+        const attachments = webhook_event.message.attachments || [];
+        const imageAttachment = attachments.find(att => att.type === "image");
 
         try {
-          const noidung_txt = fs.readFileSync("noidung.txt", "utf8");
+          let promptParts = [];
 
-          const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+          if (imageAttachment) {
+            const imageUrl = imageAttachment.payload.url;
+            const imageBuffer = await axios.get(imageUrl, { responseType: "arraybuffer" });
+            const base64Image = Buffer.from(imageBuffer.data, 'binary').toString('base64');
 
-          const prompt = \`
-Bạn đang đóng vai người bán hàng online của fanpage Lộc Pet Shop. Trả lời thật ngắn gọn (1 câu, tối đa 20 từ), thân thiện, giống chị bán hàng Facebook.
+            promptParts.push({
+              text: `Bạn là người bán hàng online của fanpage Lộc Pet Shop. Trả lời cực ngắn gọn (1 câu, 30 từ), thân thiện, đúng kiểu người thật.
 
-🌟 Chọn 1 trong các mẫu nếu phù hợp:
-- Có bé Poodle nha bạn, giá tầm 2tr5 – 3tr5 🐶 dễ thương lắm!
-- Có nha, nhiều giống lắm, bạn muốn loại nào mình gửi giá liền!
-- Nhắn Zalo 0908 725270 giúp mình nha, gửi hình dễ nói hơn 💬
+Dưới đây là thông tin nội bộ cửa hàng:
+${noidung_txt}
 
-❗ Nếu không biết câu nào phù hợp, trả lời:
-"Bạn nhắn Zalo 0908 725270 giúp mình nha!"
+Lời nhắn khách: ${textMessage}`
+            });
 
----
-Thông tin nội bộ của shop:
+            promptParts.push({
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: base64Image
+              }
+            });
+          } else if (textMessage) {
+            promptParts.push({
+              text: `Bạn là người bán hàng online của fanpage Lộc Pet Shop. Trả lời cực ngắn gọn (1 câu, 30 từ), thân thiện, đúng kiểu người thật.
 
-\${noidung_txt}
-Tin nhắn khách: \${userMessage}
-\`;
+Dưới đây là thông tin nội bộ cửa hàng:
+${noidung_txt}
 
-          const result = await model.generateContent(prompt);
-          const reply = result.response.text().trim();
+Lời nhắn khách: ${textMessage}`
+            });
+          }
 
-          await axios.post(
-            \`https://graph.facebook.com/v18.0/me/messages?access_token=\${PAGE_ACCESS_TOKEN}\`,
-            {
-              recipient: { id: sender_psid },
-              messaging_type: "RESPONSE",
-              message: { text: reply || "Shop đang cập nhật, nhắn qua Zalo 0908 725270 nhé!" }
-            }
-          );
+          if (promptParts.length > 0) {
+            const result = await model.generateContent({ contents: [{ parts: promptParts }] });
+            const reply = result.response.text().trim() || "Bạn cần tư vấn gì thêm? Gửi hình hoặc hỏi mình tư vấn nha!";
+
+            await axios.post(
+              `https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`,
+              {
+                recipient: { id: sender_psid },
+                messaging_type: "RESPONSE",
+                message: { text: reply }
+              }
+            );
+          }
+
         } catch (error) {
-          console.error("❌ Lỗi phản hồi Gemini:", error.message || error);
+          console.error("❌ Lỗi xử lý Gemini:", error.message || error);
         }
       }
     }
@@ -88,5 +106,5 @@ Tin nhắn khách: \${userMessage}
 });
 
 app.listen(3000, () => {
-  console.log("🚀 Bot đang chạy tại http://localhost:3000 (Google Gemini)");
+  console.log("🚀 Bot đang chạy tại http://localhost:3000 (Gemini + Ảnh + Văn bản)");
 });
