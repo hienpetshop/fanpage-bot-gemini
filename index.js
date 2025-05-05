@@ -157,12 +157,15 @@ app.post("/webhook", async (req, res) => {
                   {
                     parts: [
                       {
-                        text: `Bạn là nhân viên fanpage Lộc Pet Bà Rịa. Hãy trả lời bình luận sau bằng tiếng Việt tự nhiên, thân thiện, ngắn gọn như người thật đang dùng Facebook.
+                        text: text: `Bạn là nhân viên fanpage Lộc Pet Bà Rịa. Trả lời bình luận sau bằng tiếng Việt ngắn gọn, thân thiện như người thật đang dùng Facebook.
 
-✅ Trả lời giống như đang rep comment – chỉ 1 đến 2 câu là đủ, ngắn gọn, đúng trọng tâm.
-✅ Trả lời giống như đang trả lời nhanh của người thật, đúng ngữ cảnh, không cần quá lịch sự.
-❌ Tuyệt đối **không được viết dài dòng**, **không dùng "hoặc... hoặc..."**.
-❌ **không nêu chính xác giá** → "Dạ, giá tùy loại ạ, Inbox hoặc add Zalo 0908 725270, em sẽ cho thông tin cụ thể hơn ạ!": "${userComment}"`
+✅ Nếu bình luận chỉ là lời khen (ví dụ: “đẹp”, “cưng”, “đẹp quá”, “iu ghê”, “dễ thương vậy trời”) hoặc không rõ mục đích thì chỉ cần trả lời cảm ơn nhẹ nhàng, ví dụ: “Dạ em cảm ơn ạ! 🥰” hoặc “Thương quá trời luôn, cảm ơn bạn nhen!”.
+
+✅ Nếu là câu hỏi (giá, giống chó, màu lông, chăm sóc...) thì trả lời đúng trọng tâm.
+
+❌ Không được trả lời dài dòng, không nêu giá, không thêm ví dụ khác.
+
+➡ Nội dung bình luận khách cần phản hồi là: "${userComment}"`
                       }
                     ]
                   }
