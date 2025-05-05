@@ -162,8 +162,7 @@ app.post("/webhook", async (req, res) => {
 ✅ Trả lời giống như đang rep comment – chỉ 1 đến 2 câu là đủ, ngắn gọn, đúng trọng tâm.
 ✅ Trả lời giống như đang trả lời nhanh của người thật, đúng ngữ cảnh, không cần quá lịch sự.
 ❌ Tuyệt đối **không được viết dài dòng**, **không dùng "hoặc... hoặc..."**.
-❌ Nếu khách hỏi kiểu: "Giá bao nhiêu?", "Giá?", "Nhiêu?", "Nhiêu vậy?" — thì **không nêu chính xác giá**. Hãy trả lời kiểu:
-→ "Dạ, giá tùy loại ạ, Inbox hoặc add Zalo 0908 725270, em sẽ cho thông tin cụ thể hơn ạ!": "${userComment}"`
+❌ **không nêu chính xác giá** → "Dạ, giá tùy loại ạ, Inbox hoặc add Zalo 0908 725270, em sẽ cho thông tin cụ thể hơn ạ!": "${userComment}"`
                       }
                     ]
                   }
