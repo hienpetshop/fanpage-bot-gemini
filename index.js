@@ -4,6 +4,14 @@ const bodyParser = require("body-parser");
 const fs = require("fs");
 require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const admin = require("firebase-admin");
+const serviceAccount = require("./firebase-key.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+const db = admin.firestore();
 
 const app = express();
 app.use(bodyParser.json());
@@ -106,9 +114,16 @@ app.post("/webhook", async (req, res) => {
             value.from &&
             value.from.id !== PAGE_ID
           ) {
-            console.log("📥 Nhận comment từ người khác:", value.message);
             const userComment = value.message;
             const commentId = value.comment_id;
+
+            const doc = await db.collection("repliedComments").doc(commentId).get();
+            if (doc.exists) {
+              console.log("❗ Comment đã phản hồi trước đó, bỏ qua:", commentId);
+              continue;
+            }
+
+            console.log("📥 Nhận comment từ người khác:", userComment);
 
             try {
               const geminiRes = await model.generateContent({
@@ -133,6 +148,10 @@ app.post("/webhook", async (req, res) => {
                 `https://graph.facebook.com/v19.0/${commentId}/comments`,
                 { message: reply, access_token: PAGE_ACCESS_TOKEN }
               );
+
+              await db.collection("repliedComments").doc(commentId).set({
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+              });
             } catch (err) {
               console.error("❌ Lỗi trả lời comment:", err.response?.data || err.message);
             }
