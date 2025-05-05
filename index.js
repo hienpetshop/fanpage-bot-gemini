@@ -157,7 +157,7 @@ app.post("/webhook", async (req, res) => {
                   {
                     parts: [
                       {
-                        text: text: `Bạn là nhân viên fanpage Lộc Pet Bà Rịa. Trả lời bình luận sau bằng tiếng Việt ngắn gọn, thân thiện như người thật đang dùng Facebook.
+                        text: `Bạn là nhân viên fanpage Lộc Pet Bà Rịa. Trả lời bình luận sau bằng tiếng Việt ngắn gọn, thân thiện như người thật đang dùng Facebook.
 
 ✅ Nếu bình luận chỉ là lời khen (ví dụ: “đẹp”, “cưng”, “đẹp quá”, “iu ghê”, “dễ thương vậy trời”) hoặc không rõ mục đích thì chỉ cần trả lời cảm ơn nhẹ nhàng, ví dụ: “Dạ em cảm ơn ạ! 🥰” hoặc “Thương quá trời luôn, cảm ơn bạn nhen!”.
 
