@@ -6,8 +6,10 @@ require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const admin = require("firebase-admin");
 
-// ✅ Khởi tạo Firestore từ biến môi trường FIREBASE_KEY_JSON
-const firebaseConfig = JSON.parse(process.env.FIREBASE_KEY_JSON);
+// ✅ Khởi tạo Firestore từ biến môi trường GOOGLE_APPLICATION_CREDENTIALS_JSON
+const firebaseConfig = JSON.parse(
+  process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON.replace(/\\n/g, '\n')
+);
 admin.initializeApp({
   credential: admin.credential.cert(firebaseConfig),
 });
@@ -46,7 +48,6 @@ app.post("/webhook", async (req, res) => {
 
   if (body.object === "page") {
     for (const entry of body.entry) {
-      // ✅ Xử lý tin nhắn
       if (entry.messaging) {
         const webhook_event = entry.messaging[0];
         const sender_psid = webhook_event.sender.id;
@@ -103,7 +104,6 @@ app.post("/webhook", async (req, res) => {
         }
       }
 
-      // ✅ Xử lý comment
       if (entry.changes) {
         for (const change of entry.changes) {
           const value = change.value;
@@ -142,7 +142,6 @@ app.post("/webhook", async (req, res) => {
                 { message: reply, access_token: PAGE_ACCESS_TOKEN }
               );
 
-              // ✅ Ghi lại comment vào Firestore
               await db.collection("replied_comments").doc(commentId).set({
                 comment: userComment,
                 reply: reply,
