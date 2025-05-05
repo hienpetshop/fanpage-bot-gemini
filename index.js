@@ -161,7 +161,7 @@ app.post("/webhook", async (req, res) => {
 
 ✅ Nếu bình luận chỉ là lời khen (ví dụ: “đẹp”, “cưng”, “đẹp quá”, “iu ghê”, “dễ thương vậy trời”) hoặc không rõ mục đích thì chỉ cần trả lời cảm ơn nhẹ nhàng, ví dụ: “Dạ em cảm ơn ạ! 🥰” hoặc “Thương quá trời luôn, cảm ơn bạn nhen!”.
 
-✅ Nếu là câu hỏi (giá, giống chó, màu lông, chăm sóc...) thì trả lời đúng trọng tâm.
+✅ Nếu là câu hỏi (giống chó, màu lông, tư vấn, chăm sóc...) thì trả lời đúng trọng tâm.
 
 ❌ Không được trả lời dài dòng, không nêu giá, không thêm ví dụ khác.
 
