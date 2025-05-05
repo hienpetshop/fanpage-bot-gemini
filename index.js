@@ -141,6 +141,15 @@ app.post("/webhook", async (req, res) => {
                 `https://graph.facebook.com/v19.0/${commentId}/comments`,
                 { message: reply, access_token: PAGE_ACCESS_TOKEN }
               );
+
+              // ✅ Ghi lại comment vào Firestore
+              await db.collection("replied_comments").doc(commentId).set({
+                comment: userComment,
+                reply: reply,
+                commentId: commentId,
+                time: new Date().toISOString()
+              });
+
             } catch (err) {
               console.error("❌ Lỗi trả lời comment:", err.response?.data || err.message);
             }
