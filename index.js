@@ -138,7 +138,7 @@ app.post("/webhook", async (req, res) => {
 ✅ Trả lời giống như đang trả lời nhanh của người thật, đúng ngữ cảnh, không cần quá lịch sự.
 ❌ Tuyệt đối **không được viết dài dòng**, **không dùng "hoặc... hoặc..."**.
 ❌ Nếu khách hỏi kiểu: "Giá bao nhiêu?", "Giá?", "Nhiêu?", "Nhiêu vậy?" — thì **không nêu chính xác giá**. Hãy trả lời kiểu:
-→ "Dạ, giá tùy loại ạ, Inbox hoặc nhắn giúp em qua Zalo 0908 725270 nha!": \"${userComment}\"`
+→ "Dạ, giá tùy loại ạ, Inbox hoặc add Zalo 0908 725270, em sẽ cho thông tin cụ thể hơn ạ!": \"${userComment}\"`
                       }
                     ]
                   }
