@@ -1,10 +1,9 @@
-// ✅ Full code hoàn chỉnh: Auto trả lời tin nhắn + comment Facebook bằng Gemini API (có lưu comment_id vào file)
+// ✅ Full code hoàn chỉnh: Auto trả lời tin nhắn + comment Facebook bằng Gemini API có lưu comment ID vào replied.json
 
 const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
 const fs = require("fs");
-const path = require("path");
 require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -14,30 +13,16 @@ app.use(bodyParser.json());
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const PAGE_ID = '100823721459300'; // ✅ ID thật của Fanpage bạn
+const PAGE_ID = '109777333867290'; // ✅ ID thật của Fanpage bạn
 
-const repliedFile = path.join(__dirname, "replied.json");
+// ✅ Load danh sách comment đã phản hồi từ file replied.json
 let repliedCommentIds = new Set();
-
-// 🟢 Đọc các comment đã phản hồi trước đó từ file
-if (fs.existsSync(repliedFile)) {
-  try {
-    const saved = JSON.parse(fs.readFileSync(repliedFile, "utf8"));
-    if (Array.isArray(saved)) {
-      repliedCommentIds = new Set(saved);
-    }
-  } catch (err) {
-    console.error("⚠️ Không đọc được replied.json:", err.message);
-  }
-}
-
-// 🔁 Hàm lưu Set vào file JSON
-function saveRepliedIds() {
-  try {
-    fs.writeFileSync(repliedFile, JSON.stringify([...repliedCommentIds]), "utf8");
-  } catch (err) {
-    console.error("⚠️ Không lưu replied.json:", err.message);
-  }
+try {
+  const data = fs.readFileSync("replied.json", "utf8");
+  const parsed = JSON.parse(data);
+  repliedCommentIds = new Set(parsed);
+} catch (err) {
+  console.error("Không thể đọc replied.json:", err.message);
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
@@ -160,11 +145,8 @@ app.post("/webhook", async (req, res) => {
                         text: `Bạn là nhân viên fanpage Lộc Pet Bà Rịa. Trả lời bình luận sau bằng tiếng Việt ngắn gọn, thân thiện như người thật đang dùng Facebook.
 
 ✅ Nếu bình luận chỉ là lời khen (ví dụ: “đẹp”, “cưng”, “đẹp quá”, “iu ghê”, “dễ thương vậy trời”) hoặc không rõ mục đích thì chỉ cần trả lời cảm ơn nhẹ nhàng, ví dụ: “Dạ em cảm ơn ạ! 🥰” hoặc “Thương quá trời luôn, cảm ơn bạn nhen!”.
-
 ✅ Nếu là câu hỏi (giống chó, màu lông, tư vấn, chăm sóc...) thì trả lời đúng trọng tâm.
-
 ❌ Không được trả lời dài dòng, không nêu giá, không thêm ví dụ khác.
-
 ➡ Nội dung bình luận khách cần phản hồi là: "${userComment}"`
                       }
                     ]
@@ -180,7 +162,7 @@ app.post("/webhook", async (req, res) => {
               );
 
               repliedCommentIds.add(resApi.data.id);
-              saveRepliedIds(); // ✅ Lưu lại ID vào file
+              fs.writeFileSync("replied.json", JSON.stringify([...repliedCommentIds]));
             } catch (err) {
               console.error("❌ Lỗi trả lời comment:", err.response?.data || err.message);
             }
