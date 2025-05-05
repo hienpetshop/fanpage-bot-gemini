@@ -7,9 +7,9 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const admin = require("firebase-admin");
 
 // ✅ Khởi tạo Firestore từ biến môi trường FIREBASE_KEY_JSON
-const firebaseKey = JSON.parse(process.env.FIREBASE_KEY_JSON);
+const firebaseConfig = JSON.parse(process.env.FIREBASE_KEY_JSON);
 admin.initializeApp({
-  credential: admin.credential.cert(firebaseKey),
+  credential: admin.credential.cert(firebaseConfig),
 });
 const db = admin.firestore();
 
