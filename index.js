@@ -270,6 +270,17 @@ cron.schedule("0 11 * * *", async () => {
   }
 });
 
+(async () => {
+  const folder = getTodayFolder("sang");
+  const images = await getImageUrls(folder);
+  const first4 = images.slice(0, 4);
+  if (first4.length === 4) {
+    await postAlbumWithPhotos(first4, "📸 Test đăng sáng ngay lập tức");
+  } else {
+    console.warn("⚠️ Không đủ ảnh sáng để đăng!");
+  }
+})();
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Bot đang chạy tại cổng ${PORT} (Gemini + Messenger + Comment + AutoPost)`);
