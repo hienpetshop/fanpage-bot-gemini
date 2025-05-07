@@ -170,7 +170,7 @@ app.post("/webhook", async (req, res) => {
 
 function getTodayFolder(buoi) {
   const now = new Date();
-  now.setHours(now.getHours() + 7); // Múi giờ Việt Nam
+  now.setHours(now.getHours() + 7);
   const dd = String(now.getDate()).padStart(2, "0");
   const mm = String(now.getMonth() + 1).padStart(2, "0");
   const yyyy = now.getFullYear();
@@ -203,6 +203,18 @@ async function getVideoUrl(folderName) {
     console.error("❌ Lỗi lấy video:", err.message);
     return null;
   }
+}
+
+async function genCaption(buoi) {
+  const prompt = `Viết caption đăng Facebook thú cưng buổi ${buoi}, không nói rõ mua bán, nhưng để người xem biết đây là fanpage chia sẻ và hỗ trợ tìm bạn đồng hành dễ thương để nuôi. Viết tự nhiên, ngắn gọn, nhiều cảm xúc, có icon.`;
+  const result = await model.generateContent({
+    contents: [
+      {
+        parts: [ { text: prompt } ]
+      }
+    ]
+  });
+  return result.response.text().trim();
 }
 
 async function postAlbumWithPhotos(imageUrls, caption) {
@@ -240,47 +252,47 @@ async function postVideo(videoUrl, caption) {
   }
 }
 
-// 🕕 6:15 sáng VN = 23:15 UTC
 cron.schedule("15 23 * * *", async () => {
   const folder = getTodayFolder("sang");
   const images = await getImageUrls(folder);
   const first4 = images.slice(0, 4);
   if (first4.length === 4) {
-    await postAlbumWithPhotos(first4, "📸 Ảnh sáng 6h15 cho ngày mới năng lượng!");
+    const caption = await genCaption("sáng");
+    await postAlbumWithPhotos(first4, caption);
   } else {
     console.warn("⚠️ Không đủ ảnh sáng để đăng!");
   }
 });
 
-// 🕛 11:15 trưa VN = 4:15 UTC
 cron.schedule("15 4 * * *", async () => {
   const folder = getTodayFolder("trua");
   const videoUrl = await getVideoUrl(folder);
   if (videoUrl) {
-    await postVideo(videoUrl, "🎥 Trưa 11h15 nạp tí dễ thương nào cả nhà ơi!");
+    const caption = await genCaption("trưa");
+    await postVideo(videoUrl, caption);
   } else {
     console.warn("⚠️ Không tìm thấy video để đăng trưa!");
   }
 });
 
-// 🕔 17:30 chiều VN = 10:30 UTC
 cron.schedule("30 10 * * *", async () => {
   const folder = getTodayFolder("chieu");
   const images = await getImageUrls(folder);
   const first4 = images.slice(0, 4);
   if (first4.length === 4) {
-    await postAlbumWithPhotos(first4, "📷 Chiều 5h30 xem nhẹ vài bé đáng yêu!");
+    const caption = await genCaption("chiều");
+    await postAlbumWithPhotos(first4, caption);
   } else {
     console.warn("⚠️ Không đủ ảnh chiều để đăng!");
   }
 });
 
-// 🌙 20:30 tối VN = 13:30 UTC
 cron.schedule("30 13 * * *", async () => {
   const folder = getTodayFolder("toi");
   const videoUrl = await getVideoUrl(folder);
   if (videoUrl) {
-    await postVideo(videoUrl, "🎥 Trưa 20h30 nạp tí dễ thương nào cả nhà ơi!");
+    const caption = await genCaption("tối");
+    await postVideo(videoUrl, caption);
   } else {
     console.warn("⚠️ Không tìm thấy video để đăng tối!");
   }
