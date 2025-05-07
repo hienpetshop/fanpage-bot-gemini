@@ -169,6 +169,7 @@ app.post("/webhook", async (req, res) => {
 
 function getTodayFolder(buoi) {
   const now = new Date();
+  now.setHours(now.getHours() + 7); // Chuyển sang múi giờ Việt Nam
   const dd = String(now.getDate()).padStart(2, "0");
   const mm = String(now.getMonth() + 1).padStart(2, "0");
   const yyyy = now.getFullYear();
@@ -269,16 +270,6 @@ cron.schedule("0 11 * * *", async () => {
     console.warn("⚠️ Không đủ ảnh tối để đăng!");
   }
 });
-
-(async () => {
-  const images = await getImageUrls("ngay-08-05-2025/sang"); // <- ghi đúng tên bạn đang dùng
-  const first4 = images.slice(0, 4);
-  if (first4.length === 4) {
-    await postAlbumWithPhotos(first4, "📸 Test đăng ảnh ngay từ thư mục ngày mai");
-  } else {
-    console.warn("⚠️ Không đủ ảnh để đăng thử!");
-  }
-})();
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
