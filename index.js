@@ -1,9 +1,7 @@
-// ✅ Bot Facebook + Gemini + Ghi log rõ ràng
 const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
 const fs = require("fs");
-const path = require("path");
 require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const cron = require("node-cron");
@@ -16,25 +14,7 @@ const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const PAGE_ID = process.env.PAGE_ID;
 
-const repliedFile = path.join(__dirname, "replied.json");
 let repliedCommentIds = new Set();
-
-if (fs.existsSync(repliedFile)) {
-  try {
-    const saved = JSON.parse(fs.readFileSync(repliedFile, "utf8"));
-    if (Array.isArray(saved)) repliedCommentIds = new Set(saved);
-  } catch (err) {
-    console.error("❌ Lỗi đọc replied.json:", err.message);
-  }
-}
-
-function saveRepliedIds() {
-  try {
-    fs.writeFileSync(repliedFile, JSON.stringify([...repliedCommentIds]), "utf8");
-  } catch (err) {
-    console.error("❌ Lỗi ghi replied.json:", err.message);
-  }
-}
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -64,7 +44,7 @@ app.post("/webhook", async (req, res) => {
   if (body.object === "page") {
     for (const entry of body.entry) {
       // ✅ Xử lý inbox
-      if (entry.messaging) {
+      if (entry.messaging && entry.messaging.length > 0) {
         const webhook_event = entry.messaging[0];
         const sender_psid = webhook_event.sender.id;
 
@@ -80,7 +60,7 @@ app.post("/webhook", async (req, res) => {
 ✅ Nếu khách gửi ảnh chó/mèo: đoán giống, tư vấn giá, size, màu sắc nếu rõ thông tin.
 ✅ Nếu khách hỏi giá thì trả lời đúng theo thông tin.
 ➡ Nếu khách xin hình/video: luôn trả lời đúng câu này: \"Qua zalo: 0908 725270 xem giúp em, có chủ em gửi ảnh đẹp rõ nét liền ạ!\"
-  
+
 🤝 Nếu không hiểu rõ ý khách, lịch sự nhờ khách làm rõ lại, ví dụ:
 \"Khách nói giúp em rõ hơn với ạ, để em hỗ trợ chính xác nhất nha.\"
 
@@ -145,13 +125,12 @@ app.post("/webhook", async (req, res) => {
               });
 
               const reply = result.response.text().trim();
-              const resApi = await axios.post(
+              await axios.post(
                 `https://graph.facebook.com/v19.0/${commentId}/comments`,
                 { message: reply, access_token: PAGE_ACCESS_TOKEN }
               );
 
-              repliedCommentIds.add(resApi.data.id);
-              saveRepliedIds();
+              repliedCommentIds.add(commentId);
               console.log("✅ Đã trả lời comment thành công!");
             } catch (err) {
               console.error("❌ Lỗi trả lời comment:", err.response?.data || err.message);
