@@ -271,13 +271,12 @@ cron.schedule("0 11 * * *", async () => {
 });
 
 (async () => {
-  const folder = getTodayFolder("sang");
-  const images = await getImageUrls(folder);
+  const images = await getImageUrls("ngay-08-05-2025/sang"); // <- ghi đúng tên bạn đang dùng
   const first4 = images.slice(0, 4);
   if (first4.length === 4) {
-    await postAlbumWithPhotos(first4, "📸 Test đăng sáng ngay lập tức");
+    await postAlbumWithPhotos(first4, "📸 Test đăng ảnh ngay từ thư mục ngày mai");
   } else {
-    console.warn("⚠️ Không đủ ảnh sáng để đăng!");
+    console.warn("⚠️ Không đủ ảnh để đăng thử!");
   }
 })();
 
