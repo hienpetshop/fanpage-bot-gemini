@@ -1,4 +1,4 @@
-// ✅ Bot Facebook + Gemini + Cloudinary + Auto Post 3 bài/ngày
+// ✅ Bot Facebook + Gemini + Cloudinary + Auto Post 4 bài/ngày (6h15, 11h15, 17h30, 20h30)
 const express = require("express");
 const axios = require("axios");
 const bodyParser = require("body-parser");
@@ -24,15 +24,16 @@ cloudinary.config({
 });
 
 const repliedFile = path.join(__dirname, "replied.json");
-let repliedCommentIds = new Set();
+if (!fs.existsSync(repliedFile)) {
+  fs.writeFileSync(repliedFile, "[]", "utf8");
+}
 
-if (fs.existsSync(repliedFile)) {
-  try {
-    const saved = JSON.parse(fs.readFileSync(repliedFile, "utf8"));
-    if (Array.isArray(saved)) repliedCommentIds = new Set(saved);
-  } catch (err) {
-    console.error("❌ Lỗi đọc replied.json:", err.message);
-  }
+let repliedCommentIds = new Set();
+try {
+  const saved = JSON.parse(fs.readFileSync(repliedFile, "utf8"));
+  if (Array.isArray(saved)) repliedCommentIds = new Set(saved);
+} catch (err) {
+  console.error("❌ Lỗi đọc replied.json:", err.message);
 }
 
 function saveRepliedIds() {
@@ -169,7 +170,7 @@ app.post("/webhook", async (req, res) => {
 
 function getTodayFolder(buoi) {
   const now = new Date();
-  now.setHours(now.getHours() + 7); // Chuyển sang múi giờ Việt Nam
+  now.setHours(now.getHours() + 7); // Múi giờ Việt Nam
   const dd = String(now.getDate()).padStart(2, "0");
   const mm = String(now.getMonth() + 1).padStart(2, "0");
   const yyyy = now.getFullYear();
@@ -239,35 +240,49 @@ async function postVideo(videoUrl, caption) {
   }
 }
 
-cron.schedule("0 2 * * *", async () => {
+// 🕕 6:15 sáng VN = 23:15 UTC
+cron.schedule("15 23 * * *", async () => {
   const folder = getTodayFolder("sang");
   const images = await getImageUrls(folder);
   const first4 = images.slice(0, 4);
   if (first4.length === 4) {
-    await postAlbumWithPhotos(first4, "📸 Ảnh cưng buổi sáng đây cả nhà ơi!");
+    await postAlbumWithPhotos(first4, "📸 Ảnh sáng 6h15 cho ngày mới năng lượng!");
   } else {
     console.warn("⚠️ Không đủ ảnh sáng để đăng!");
   }
 });
 
-cron.schedule("0 5 * * *", async () => {
-  const folder = getTodayFolder("chieu");
+// 🕛 11:15 trưa VN = 4:15 UTC
+cron.schedule("15 4 * * *", async () => {
+  const folder = getTodayFolder("trua");
   const videoUrl = await getVideoUrl(folder);
   if (videoUrl) {
-    await postVideo(videoUrl, "🎬 Video chiều nay siêu cưng, coi liền đi cả nhà!");
+    await postVideo(videoUrl, "🎥 Trưa 11h15 nạp tí dễ thương nào cả nhà ơi!");
   } else {
-    console.warn("⚠️ Không tìm thấy video để đăng!");
+    console.warn("⚠️ Không tìm thấy video để đăng trưa!");
   }
 });
 
-cron.schedule("0 11 * * *", async () => {
-  const folder = getTodayFolder("toi");
+// 🕔 17:30 chiều VN = 10:30 UTC
+cron.schedule("30 10 * * *", async () => {
+  const folder = getTodayFolder("chieu");
   const images = await getImageUrls(folder);
   const first4 = images.slice(0, 4);
   if (first4.length === 4) {
-    await postAlbumWithPhotos(first4, "🌙 Ảnh cưng tối nay trước khi ngủ nha cả nhà!");
+    await postAlbumWithPhotos(first4, "📷 Chiều 5h30 xem nhẹ vài bé đáng yêu!");
   } else {
-    console.warn("⚠️ Không đủ ảnh tối để đăng!");
+    console.warn("⚠️ Không đủ ảnh chiều để đăng!");
+  }
+});
+
+// 🌙 20:30 tối VN = 13:30 UTC
+cron.schedule("30 13 * * *", async () => {
+  const folder = getTodayFolder("toi");
+  const videoUrl = await getVideoUrl(folder);
+  if (videoUrl) {
+    await postVideo(videoUrl, "🎥 Trưa 20h30 nạp tí dễ thương nào cả nhà ơi!");
+  } else {
+    console.warn("⚠️ Không tìm thấy video để đăng tối!");
   }
 });
 
