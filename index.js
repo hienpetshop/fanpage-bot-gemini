@@ -145,36 +145,82 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// ✅ Hàm đăng bài kiểu feed (caption nằm trên ảnh hoặc video)
-async function postFeedWithMedia(mediaUrl, message) {
-  const url = `https://graph.facebook.com/${PAGE_ID}/feed`;
+// ====== TỰ ĐỘNG ĐĂNG 3 BÀI MỖI NGÀY ======
+
+// 🔹 Hàm đăng 1 bài với 4 ảnh + caption
+async function postAlbumWithPhotos(imageUrls, caption) {
   try {
-    const res = await axios.post(url, {
-      message: message,
-      link: mediaUrl,
+    const uploaded = await Promise.all(
+      imageUrls.map(url =>
+        axios.post(`https://graph.facebook.com/${PAGE_ID}/photos`, {
+          url,
+          published: false,
+          access_token: PAGE_ACCESS_TOKEN,
+        }).then(res => res.data.id)
+      )
+    );
+
+    await axios.post(`https://graph.facebook.com/${PAGE_ID}/feed`, {
+      message: caption,
+      attached_media: uploaded.map(id => ({ media_fbid: id })),
       access_token: PAGE_ACCESS_TOKEN,
     });
-    console.log("✅ Đăng bài /feed thành công:", res.data);
+
+    console.log("✅ Đăng album ảnh thành công!");
   } catch (err) {
-    console.error("❌ Lỗi đăng bài /feed:", err.response?.data || err.message);
+    console.error("❌ Lỗi đăng album ảnh:", err.response?.data || err.message);
   }
 }
 
-// 🕘 Tự động đăng bài mỗi ngày lúc 9h sáng (giờ VN = 2h UTC)
-cron.schedule("0 2 * * *", () => {
-  const today = new Date().getDate();
-  if (today % 2 === 0) {
-    postFeedWithMedia(
-      "https://yourcdn.com/image.jpg",
-      "📸 Hôm nay có ảnh siêu cưng đây cả nhà ơi!"
-    );
-  } else {
-    postFeedWithMedia(
-      "https://yourcdn.com/video.mp4",
-      "🎥 Video hot hôm nay, coi liền cho nóng!"
-    );
+// 🔹 Hàm đăng 1 video + caption
+async function postVideo(videoUrl, caption) {
+  try {
+    await axios.post(`https://graph.facebook.com/${PAGE_ID}/videos`, {
+      file_url: videoUrl,
+      description: caption,
+      access_token: PAGE_ACCESS_TOKEN,
+    });
+
+    console.log("✅ Đăng video thành công!");
+  } catch (err) {
+    console.error("❌ Lỗi đăng video:", err.response?.data || err.message);
   }
+}
+
+// 🕘 9h sáng (2h UTC) – bài 1: 4 ảnh
+cron.schedule("0 2 * * *", () => {
+  postAlbumWithPhotos(
+    [
+      "https://yourcdn.com/morning1.jpg",
+      "https://yourcdn.com/morning2.jpg",
+      "https://yourcdn.com/morning3.jpg",
+      "https://yourcdn.com/morning4.jpg",
+    ],
+    "📸 Ảnh cưng buổi sáng đây cả nhà ơi!"
+  );
 });
+
+// 🕛 12h trưa (5h UTC) – bài 2: 4 ảnh
+cron.schedule("0 5 * * *", () => {
+  postAlbumWithPhotos(
+    [
+      "https://yourcdn.com/noon1.jpg",
+      "https://yourcdn.com/noon2.jpg",
+      "https://yourcdn.com/noon3.jpg",
+      "https://yourcdn.com/noon4.jpg",
+    ],
+    "🐶 Trưa nay rảnh rỗi, ngắm mấy bé này nha!"
+  );
+});
+
+// 🕕 6h chiều (11h UTC) – bài 3: 1 video
+cron.schedule("0 11 * * *", () => {
+  postVideo(
+    "https://yourcdn.com/video.mp4",
+    "🎬 Video chiều nay siêu cưng, coi liền đi cả nhà!"
+  );
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
