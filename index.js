@@ -6,6 +6,7 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const cron = require("node-cron");
 
 const app = express();
 app.use(bodyParser.json());
@@ -162,6 +163,37 @@ app.post("/webhook", async (req, res) => {
     res.status(200).send("EVENT_RECEIVED");
   } else {
     res.sendStatus(404);
+  }
+});
+
+// ✅ Hàm đăng bài kiểu feed (caption nằm trên ảnh hoặc video)
+async function postFeedWithMedia(mediaUrl, message) {
+  const url = `https://graph.facebook.com/${PAGE_ID}/feed`;
+  try {
+    const res = await axios.post(url, {
+      message: message,
+      link: mediaUrl,
+      access_token: PAGE_ACCESS_TOKEN,
+    });
+    console.log("✅ Đăng bài /feed thành công:", res.data);
+  } catch (err) {
+    console.error("❌ Lỗi đăng bài /feed:", err.response?.data || err.message);
+  }
+}
+
+// 🕘 Tự động đăng bài mỗi ngày lúc 9h sáng (giờ VN = 2h UTC)
+cron.schedule("0 2 * * *", () => {
+  const today = new Date().getDate();
+  if (today % 2 === 0) {
+    postFeedWithMedia(
+      "https://yourcdn.com/image.jpg",
+      "📸 Hôm nay có ảnh siêu cưng đây cả nhà ơi!"
+    );
+  } else {
+    postFeedWithMedia(
+      "https://yourcdn.com/video.mp4",
+      "🎥 Video hot hôm nay, coi liền cho nóng!"
+    );
   }
 });
 
