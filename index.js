@@ -257,7 +257,8 @@ cron.schedule("15 23 * * *", async () => {
   const images = await getImageUrls(folder);
   const first4 = images.slice(0, 4);
   if (first4.length === 4) {
-    const caption = await genCaption("sáng");
+    const caption = await genCaption("\$1");
+  console.log("📢 Caption \"\$1\":", caption);
     await postAlbumWithPhotos(first4, caption);
   } else {
     console.warn("⚠️ Không đủ ảnh sáng để đăng!");
@@ -268,7 +269,8 @@ cron.schedule("15 4 * * *", async () => {
   const folder = getTodayFolder("trua");
   const videoUrl = await getVideoUrl(folder);
   if (videoUrl) {
-    const caption = await genCaption("trưa");
+    const caption = await genCaption("\$1");
+  console.log("📢 Caption \"\$1\":", caption);
     await postVideo(videoUrl, caption);
   } else {
     console.warn("⚠️ Không tìm thấy video để đăng trưa!");
@@ -280,7 +282,8 @@ cron.schedule("30 10 * * *", async () => {
   const images = await getImageUrls(folder);
   const first4 = images.slice(0, 4);
   if (first4.length === 4) {
-    const caption = await genCaption("chiều");
+    const caption = await genCaption("\$1");
+  console.log("📢 Caption \"\$1\":", caption);
     await postAlbumWithPhotos(first4, caption);
   } else {
     console.warn("⚠️ Không đủ ảnh chiều để đăng!");
@@ -291,7 +294,8 @@ cron.schedule("30 13 * * *", async () => {
   const folder = getTodayFolder("toi");
   const videoUrl = await getVideoUrl(folder);
   if (videoUrl) {
-    const caption = await genCaption("tối");
+    const caption = await genCaption("\$1");
+  console.log("📢 Caption \"\$1\":", caption);
     await postVideo(videoUrl, caption);
   } else {
     console.warn("⚠️ Không tìm thấy video để đăng tối!");
