@@ -14,7 +14,7 @@ app.use(bodyParser.json());
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const PAGE_ID = '100823721459300'; // ✅ ID thật của Fanpage bạn
+const PAGE_ID = process.env.PAGE_ID; // ✅ ID thật của Fanpage bạn
 
 const repliedFile = path.join(__dirname, "replied.json");
 let repliedCommentIds = new Set();
