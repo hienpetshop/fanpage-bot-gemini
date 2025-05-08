@@ -258,7 +258,7 @@ async function postVideo(videoUrl, caption) {
   }
 }
 
-cron.schedule("30 7 * * *", async () => {
+cron.schedule("25 7 * * *", async () => {
   const folder = getTodayFolder("sang");
   const images = await getImageUrls(folder);
   const first4 = images.slice(0, 4);
