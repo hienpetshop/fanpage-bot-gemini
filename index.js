@@ -12,6 +12,12 @@ const cloudinary = require("cloudinary").v2;
 const app = express();
 app.use(bodyParser.json());
 
+app.get("/ping", (req, res) => {
+  res.send("✅ Bot đang thức - ping thành công!");
+});
+
+// phần còn lại giữ nguyên ...
+
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
