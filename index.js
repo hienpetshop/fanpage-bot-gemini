@@ -302,7 +302,7 @@ console.log("📢 Caption chiều:", caption);
   }
 });
 
-cron.schedule("30 1 * * *", async () => {
+cron.schedule("30 13 * * *", async () => {
   const folder = getTodayFolder("toi");
   const videoUrl = await getVideoUrl(folder);
   if (videoUrl) {
