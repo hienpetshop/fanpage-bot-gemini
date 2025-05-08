@@ -212,11 +212,11 @@ async function getVideoUrl(folderName) {
 }
 
 async function genCaption(buoi) {
-  const prompt = `Viết caption đăng Facebook thú cưng buổi ${buoi} theo phong cách **hài hước, vui vẻ, gây cười nhẹ nhàng** 😂  
-Không nói rõ mua bán 🐾 mà để người xem hiểu đây là fanpage chia sẻ thú cưng đáng yêu để kết nối nuôi dưỡng 🐶💬  
-✍️ Viết ngắn gọn 2–3 câu, mỗi câu xuống dòng bằng \\n 📌  
-Mỗi dòng nên bắt đầu bằng 2 icon dễ thương như 💕, 😍, ❤️, 🐶, 🐾, 🧸, 💬, 🎀, 📸...  
-‼️ Không cần nghiêm túc, có thể dùng ngôn ngữ gần gũi, chọc nhẹ như đang kể chuyện vui 😹🤣`;
+  const prompt = `Viết caption Facebook buổi ${buoi} cho fanpage thú cưng. 
+Viết kiểu như người nuôi thú thật sự, hài hước nhẹ nhàng, không nhắc trực tiếp tới "bán", "mua", "giá". 
+Nội dung phải khiến người đọc cảm nhận rõ là các bé thú cưng này đang sẵn sàng tìm nhà mới để được yêu thương. 
+Viết tối đa 3 câu, ngắn gọn, ngắt dòng bằng \\n, đầu dòng có icon thú vị như 🐾, 🐶, 😺, ❤️, ✨, 🏡, 💌... 
+Phong cách đời thường, gần gũi như đang kể chuyện với bạn bè.`;
 
   const result = await model.generateContent({
     contents: [
