@@ -258,7 +258,7 @@ async function postVideo(videoUrl, caption) {
   }
 }
 
-cron.schedule("15 23 * * *", async () => {
+cron.schedule("30 7 * * *", async () => {
   const folder = getTodayFolder("sang");
   const images = await getImageUrls(folder);
   const first4 = images.slice(0, 4);
@@ -271,7 +271,7 @@ console.log("📢 Caption sáng:", caption);
   }
 });
 
-cron.schedule("15 4 * * *", async () => {
+cron.schedule("30 9 * * *", async () => {
   const folder = getTodayFolder("trua");
   const videoUrl = await getVideoUrl(folder);
   if (videoUrl) {
@@ -283,7 +283,7 @@ console.log("📢 Caption trưa:", caption);
   }
 });
 
-cron.schedule("30 10 * * *", async () => {
+cron.schedule("30 11 * * *", async () => {
   const folder = getTodayFolder("chieu");
   const images = await getImageUrls(folder);
   const first4 = images.slice(0, 4);
