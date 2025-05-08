@@ -215,7 +215,7 @@ async function genCaption(buoi) {
   const prompt = `Viết caption Facebook buổi ${buoi} cho fanpage thú cưng. 
 Viết kiểu như người nuôi thú thật sự, hài hước nhẹ nhàng, không nhắc trực tiếp tới "bán", "mua", "giá". 
 Nội dung phải khiến người đọc cảm nhận rõ là các bé thú cưng này đang sẵn sàng tìm nhà mới để được yêu thương. 
-Viết tối đa 3 câu, ngắn gọn, ngắt dòng bằng \\n, đầu dòng có icon thú vị như 🐾, 🐶, 😺, ❤️, ✨, 🏡, 💌... 
+Viết tối đa 3 câu, ngắn gọn, ngắt dòng bằng \\n, đầu dòng có icon thú vị như 🐶, 😺, ❤️, ✨, 🏡, 💌... 
 Phong cách đời thường, gần gũi như đang kể chuyện với bạn bè.`;
 
   const result = await model.generateContent({
