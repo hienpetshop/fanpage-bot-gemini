@@ -212,12 +212,24 @@ async function getVideoUrl(folderName) {
 }
 
 async function genCaption(buoi) {
-  const prompt = `Viết caption Facebook buổi ${buoi} cho fanpage thú cưng. 
-❤️Viết kiểu như người nuôi thú thật sự, hài hước nhẹ nhàng, không nhắc trực tiếp tới "bán", "mua", "giá", "tìm nhà", "tìm chủ", "liên hệ", "nhắn tin",. 
-❤️Nội dung phải khiến người đọc cảm nhận rõ là các bé thú cưng này đang sẵn sàng tìm nhà mới để được yêu thương. 
-❤️Viết tối đa 3 câu, ngắn gọn, hết câu xuống dòng.
-❤️Đầu dòng có icon thú vị như 🐶, 😺, ❤️, ✨, 🏡, 💌... 
-❤️Phong cách đời thường, gần gũi như đang kể chuyện với bạn bè.`;
+  const prompt = Viết caption Facebook buổi ${buoi} cho fanpage thú cưng.
+
+✨ Viết như một người nuôi thú cưng thật đang kể chuyện thường ngày, giọng điệu gần gũi, nhẹ nhàng, xen chút hài hước đời thường. Không viết kiểu quảng cáo, không thuyết phục người đọc.
+
+❌ Tuyệt đối không dùng từ như: "bán", "mua", "giá", "tìm nhà", "tìm chủ", "liên hệ", "nhắn tin", "đặt cọc", "giao", "ship".
+
+✅ Nội dung phải khiến người đọc *ngầm hiểu* là bé thú cưng đang sẵn sàng cho một chặng hành trình mới, nhưng thể hiện qua cảm xúc và hành động của bé (như háo hức, tò mò, chuẩn bị đi chơi, dậy sớm, ngắm nắng...).
+
+✅ Mỗi caption tối đa 3 câu. Mỗi câu xuống dòng riêng.
+
+📌 Mỗi câu nên bắt đầu bằng icon như: 🐶, 😺, ❤️, ✨, 🏡, 💌, 🎒, ☀️, 🐾...
+
+Ví dụ phong cách đúng:  
+☀️ Sáng nay bé Mỡ dậy từ 5h, nằm ngó trời ngó đất như đang suy nghĩ chuyện lớn.  
+🐾 Chắc đang lên kế hoạch cho cuộc khám phá ngày mới đó!  
+😄 Bé ngoan quá trời luôn á!
+
+Viết theo phong cách đó.
 
   const result = await model.generateContent({
     contents: [
