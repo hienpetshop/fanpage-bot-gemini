@@ -212,7 +212,7 @@ async function getVideoUrl(folderName) {
 }
 
 async function genCaption(buoi) {
-  const prompt = Viết caption Facebook buổi ${buoi} cho fanpage thú cưng.
+  const prompt = `Viết caption Facebook buổi ${buoi} cho fanpage thú cưng.
 
 ✨ Viết như một người nuôi thú cưng thật đang kể chuyện thường ngày, giọng điệu gần gũi, nhẹ nhàng, xen chút hài hước đời thường. Không viết kiểu quảng cáo, không thuyết phục người đọc.
 
