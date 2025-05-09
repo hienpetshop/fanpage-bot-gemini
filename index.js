@@ -213,7 +213,7 @@ async function getVideoUrl(folderName) {
 
 async function genCaption(buoi) {
   const prompt = `Viết caption Facebook buổi ${buoi} cho fanpage thú cưng. 
-❤️Viết kiểu như người nuôi thú thật sự, hài hước nhẹ nhàng, không nhắc trực tiếp tới "bán", "mua", "giá". 
+❤️Viết kiểu như người nuôi thú thật sự, hài hước nhẹ nhàng, không nhắc trực tiếp tới "bán", "mua", "giá", "tìm nhà", "tìm chủ", "liên hệ", "nhắn tin",. 
 ❤️Nội dung phải khiến người đọc cảm nhận rõ là các bé thú cưng này đang sẵn sàng tìm nhà mới để được yêu thương. 
 ❤️Viết tối đa 3 câu, ngắn gọn, hết câu xuống dòng.
 ❤️Đầu dòng có icon thú vị như 🐶, 😺, ❤️, ✨, 🏡, 💌... 
