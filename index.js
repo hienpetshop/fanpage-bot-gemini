@@ -8,7 +8,7 @@ const cron = require("node-cron");
 require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Dùng chung cho cả văn bản và ảnh
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Dùng chung model cho văn bản + hình ảnh
 const cloudinary = require("cloudinary").v2;
 
 const app = express();
@@ -85,7 +85,6 @@ app.post("/webhook", async (req, res) => {
           const textMessage = webhook_event.message.text || "";
           const attachments = webhook_event.message.attachments;
 
-          // Nếu có ảnh
           if (!textMessage && attachments && attachments[0]?.type === "image") {
             const imageUrl = attachments[0].payload.url;
             console.log("📷 Nhận ảnh:", imageUrl);
@@ -94,7 +93,7 @@ app.post("/webhook", async (req, res) => {
               const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
               const base64Image = Buffer.from(response.data, "binary").toString("base64");
 
-              const result = await modelVision.generateContent([
+              const result = await model.generateContent([
                 {
                   inlineData: {
                     mimeType: "image/jpeg",
@@ -121,7 +120,6 @@ app.post("/webhook", async (req, res) => {
             return;
           }
 
-          // Nếu có tin nhắn văn bản
           if (textMessage) {
             console.log("💬 Nhận inbox:", textMessage);
 
@@ -142,7 +140,7 @@ app.post("/webhook", async (req, res) => {
 - Nếu khách thân thiện, hãy trả lời vui vẻ, thêm icon cảm xúc.
 - Nếu khách khó tính, trả lời thật rõ ràng, chuyên nghiệp.`;
 
-              const result = await modelText.generateContent({
+              const result = await model.generateContent({
                 contents: [
                   {
                     parts: [
