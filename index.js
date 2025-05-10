@@ -53,8 +53,6 @@ function saveRepliedIds() {
   }
 }
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const noidung_txt = fs.readFileSync("noidung.txt", "utf8");
 
 app.get("/", (req, res) => {
@@ -86,10 +84,50 @@ app.post("/webhook", async (req, res) => {
 
         if (webhook_event.message) {
           const textMessage = webhook_event.message.text || "";
-          console.log("💬 Nhận inbox:", textMessage);
+          const attachments = webhook_event.message.attachments;
 
-          try {
-            const basePrompt = `Bạn là nhân viên bán hàng online của fanpage Lộc Pet Shop. Trả lời như đang chat Facebook: ngắn gọn, tự nhiên, thân thiện, đúng trọng tâm, không văn vở, không dùng \"Chào bạn!\" liên tục.
+          // Nếu có ảnh
+          if (!textMessage && attachments && attachments[0]?.type === "image") {
+            const imageUrl = attachments[0].payload.url;
+            console.log("📷 Nhận ảnh:", imageUrl);
+
+            try {
+              const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
+              const base64Image = Buffer.from(response.data, "binary").toString("base64");
+
+              const result = await modelVision.generateContent([
+                {
+                  inlineData: {
+                    mimeType: "image/jpeg",
+                    data: base64Image,
+                  },
+                },
+                {
+                  text: "Đây là ảnh một con chó. Bạn hãy đoán giống chó và ước tính giá bán tại Việt Nam. Trả lời ngắn gọn, dễ hiểu."
+                }
+              ]);
+
+              const reply = result.response.text().trim();
+              await axios.post(`https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
+                recipient: { id: sender_psid },
+                messaging_type: "RESPONSE",
+                message: { text: reply },
+              });
+
+              console.log("✅ Đã trả lời ảnh thành công!");
+            } catch (err) {
+              console.error("❌ Lỗi xử lý ảnh:", err.message);
+            }
+
+            return;
+          }
+
+          // Nếu có tin nhắn văn bản
+          if (textMessage) {
+            console.log("💬 Nhận inbox:", textMessage);
+
+            try {
+              const basePrompt = `Bạn là nhân viên bán hàng online của fanpage Lộc Pet Shop. Trả lời như đang chat Facebook: ngắn gọn, tự nhiên, thân thiện, đúng trọng tâm, không văn vở, không dùng \"Chào bạn!\" liên tục.
 
 ❌ Không hỏi kiểu: “bạn cần gì”, “shop có nhiều loại”, “xem chó hay mèo”, “hình vậy là sao”. Nếu không chắc chắn thì bỏ qua, không suy đoán.
 ✅ Nếu khách hỏi tư vấn cách chăm sóc chó/mèo, thì **trích nội dung quan trọng và tóm gọn đủ ý trong phần hướng dẫn chăm sóc** từ nội dung nội bộ (nếu có), không được nói chung chung.
@@ -105,29 +143,31 @@ app.post("/webhook", async (req, res) => {
 - Nếu khách thân thiện, hãy trả lời vui vẻ, thêm icon cảm xúc.
 - Nếu khách khó tính, trả lời thật rõ ràng, chuyên nghiệp.`;
 
-            const result = await model.generateContent({
-              contents: [
-                {
-                  parts: [
-                    { text: `${basePrompt}\n\nDưới đây là thông tin nội bộ cửa hàng:\n${noidung_txt}\n\nLời nhắn khách: ${textMessage}` }
-                  ]
-                }
-              ]
-            });
+              const result = await modelText.generateContent({
+                contents: [
+                  {
+                    parts: [
+                      { text: `${basePrompt}\n\nDưới đây là thông tin nội bộ cửa hàng:\n${noidung_txt}\n\nLời nhắn khách: ${textMessage}` }
+                    ]
+                  }
+                ]
+              });
 
-            const reply = result.response.text().trim();
-            await axios.post(`https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
-              recipient: { id: sender_psid },
-              messaging_type: "RESPONSE",
-              message: { text: reply || "Mình nhận được rồi nha!" },
-            });
-            console.log("✅ Đã trả lời inbox thành công!");
-          } catch (err) {
-            console.error("❌ Lỗi trả lời inbox:", err.message);
+              const reply = result.response.text().trim();
+              await axios.post(`https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
+                recipient: { id: sender_psid },
+                messaging_type: "RESPONSE",
+                message: { text: reply || "Mình nhận được rồi nha!" },
+              });
+              console.log("✅ Đã trả lời inbox thành công!");
+            } catch (err) {
+              console.error("❌ Lỗi trả lời inbox:", err.message);
+            }
           }
         }
       }
 
+      // phần trả lời comment giữ nguyên như cũ...
       if (entry.changes) {
         for (const change of entry.changes) {
           const value = change.value;
@@ -144,12 +184,12 @@ app.post("/webhook", async (req, res) => {
             console.log("💬 Nhận comment:", userComment);
 
             try {
-              const result = await model.generateContent({
+              const result = await modelText.generateContent({
                 contents: [
                   {
                     parts: [
                       {
-                        text: `Bạn là nhân viên fanpage Lộc Pet Bà Rịa. Hãy trả lời bình luận Facebook sau bằng tiếng Việt, tự nhiên, ngắn gọn, giống như người thật đang rep nhanh trên Facebook. Tránh lặp lại nội dung nội bộ, không trả lời giá cụ thể, không giải thích dài dòng. \n\nNội dung bình luận khách: \"${userComment}\"`
+                        text: `Bạn là nhân viên fanpage Lộc Pet Bà Rịa. Hãy trả lời bình luận Facebook sau bằng tiếng Việt, tự nhiên, ngắn gọn, giống như người thật đang rep nhanh trên Facebook. Tránh lặp lại nội dung nội bộ, không trả lời giá cụ thể, không giải thích dài dòng. \n\nNội dung bình luận khách: "${userComment}"`
                       }
                     ]
                   }
@@ -176,6 +216,7 @@ app.post("/webhook", async (req, res) => {
     res.sendStatus(404);
   }
 });
+
 
 function getTodayFolder(buoi) {
   const now = new Date();
