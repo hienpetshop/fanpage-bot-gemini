@@ -118,7 +118,7 @@ app.post("/webhook", async (req, res) => {
                   },
                 },
                 {
-                  text: "Đây là ảnh một con chó hoặc mèo. Bạn hãy đoán giống chó và ước tính giá bán tại Việt Nam. Trả lời ngắn gọn, dễ hiểu."
+                  text: "Đây là ảnh một con chó hoặc mèo. Đoán giống và ước tính giá bán tại shop. Trả lời ngắn gọn, dễ hiểu."
                 }
               ]);
               const reply = result.response.text().trim();
