@@ -8,8 +8,7 @@ const cron = require("node-cron");
 require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const modelText = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });     // Trả lời tin nhắn
-const modelVision = genAI.getGenerativeModel({ model: "gemini-1.5-pro-vision" });  // Trả lời ảnh
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Dùng chung cho cả văn bản và ảnh
 const cloudinary = require("cloudinary").v2;
 
 const app = express();
