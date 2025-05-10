@@ -100,7 +100,7 @@ app.post("/webhook", async (req, res) => {
           if (!textMessage && attachments && attachments[0]?.type === "image") {
             const imageUrl = attachments[0].payload.url;
 
-            // ⏱️ Kiểm tra thời gian gửi ảnh, chỉ xử lý nếu ảnh mới gửi (trong 30 giây)
+            // ⏱️ Kiểm tra thời gian gửi ảnh, chỉ xử lý nếu ảnh mới gửi (trong 10 giây)
             const timestamp = webhook_event.timestamp;
             const now = Date.now();
             if (!timestamp || now - timestamp > 10000) {
