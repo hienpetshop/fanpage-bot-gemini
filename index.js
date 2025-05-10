@@ -273,7 +273,7 @@ Ví dụ phong cách đúng:
 🐾 Chắc đang lên kế hoạch cho cuộc khám phá ngày mới đó!  
 😄 Bé ngoan quá trời luôn á!`;
 
-  const result = await model.generateContent({
+  const result = await modelText.generateContent({
     contents: [
       {
         parts: [ { text: prompt } ]
