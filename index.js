@@ -7,8 +7,6 @@ const path = require("path");
 const cron = require("node-cron");
 require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const cloudinary = require("cloudinary").v2;
 
 const app = express();
@@ -17,6 +15,8 @@ app.use(bodyParser.json());
 app.get("/ping", (req, res) => {
   res.send("✅ Bot đang thức - ping thành công!");
 });
+
+// phần còn lại giữ nguyên ...
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
@@ -50,24 +50,8 @@ function saveRepliedIds() {
   }
 }
 
-const repliedImageFile = path.join(__dirname, "replied_images.json");
-let repliedImageIds = new Set();
-if (fs.existsSync(repliedImageFile)) {
-  try {
-    const saved = JSON.parse(fs.readFileSync(repliedImageFile, "utf8"));
-    if (Array.isArray(saved)) repliedImageIds = new Set(saved);
-  } catch (err) {
-    console.error("❌ Lỗi đọc replied_images.json:", err.message);
-  }
-}
-function saveRepliedImages() {
-  try {
-    fs.writeFileSync(repliedImageFile, JSON.stringify([...repliedImageIds]), "utf8");
-  } catch (err) {
-    console.error("❌ Lỗi ghi replied_images.json:", err.message);
-  }
-}
-
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const noidung_txt = fs.readFileSync("noidung.txt", "utf8");
 
 app.get("/", (req, res) => {
@@ -78,6 +62,7 @@ app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
+
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
     console.log("✅ Webhook đã được Facebook xác nhận");
     res.status(200).send(challenge);
@@ -89,59 +74,105 @@ app.get("/webhook", (req, res) => {
 app.post("/webhook", async (req, res) => {
   console.log("📨 Đã nhận webhook từ Facebook");
   const body = req.body;
+
   if (body.object === "page") {
     for (const entry of body.entry) {
       if (entry.messaging && entry.messaging.length > 0) {
         const webhook_event = entry.messaging[0];
         const sender_psid = webhook_event.sender.id;
+
         if (webhook_event.message) {
           const textMessage = webhook_event.message.text || "";
-          const attachments = webhook_event.message.attachments;
-          if (!textMessage && attachments && attachments[0]?.type === "image") {
-            const imageUrl = attachments[0].payload.url;
+          console.log("💬 Nhận inbox:", textMessage);
 
-            // ⏱️ Kiểm tra thời gian gửi ảnh, chỉ xử lý nếu ảnh mới gửi (trong 10 giây)
-            const timestamp = webhook_event.timestamp;
-            const now = Date.now();
-            if (!timestamp || now - timestamp > 10000) {
-              console.warn("⏱️ Ảnh cũ quá (gửi lại webhook), bỏ qua.");
-              return;
-            }
+          try {
+            const basePrompt = `Bạn là nhân viên bán hàng online của fanpage Lộc Pet Shop. Trả lời như đang chat Facebook: ngắn gọn, tự nhiên, thân thiện, đúng trọng tâm, không văn vở, không dùng \"Chào bạn!\" liên tục.
 
-            const uniqueKey = `${sender_psid}_${imageUrl}`;
-            if (repliedImageIds.has(uniqueKey)) {
-              console.log("⚠️ Ảnh này từ người này đã được trả lời. Bỏ qua.");
-              return;
-            }
-            repliedImageIds.add(uniqueKey);
-            saveRepliedImages();
-            console.log("📷 Nhận ảnh từ URL:", imageUrl);
-            try {
-              const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
-              const base64Image = Buffer.from(response.data, "binary").toString("base64");
-              const result = await model.generateContent([
+❌ Không hỏi kiểu: “bạn cần gì”, “shop có nhiều loại”, “xem chó hay mèo”, “hình vậy là sao”. Nếu không chắc chắn thì bỏ qua, không suy đoán.
+✅ Nếu khách hỏi tư vấn cách chăm sóc chó/mèo, thì **trích nội dung quan trọng và tóm gọn đủ ý trong phần hướng dẫn chăm sóc** từ nội dung nội bộ (nếu có), không được nói chung chung.
+✅ Nếu khách gửi ảnh chó/mèo: đoán giống, tư vấn giá, size, màu sắc nếu rõ thông tin.
+✅ Nếu khách hỏi giá thì trả lời đúng theo thông tin.
+➡ Nếu khách xin hình/video: luôn trả lời đúng câu này: \"Qua zalo: 0908 725270 xem giúp em, có chủ em gửi ảnh đẹp rõ nét liền ạ!\"
+
+🤝 Nếu không hiểu rõ ý khách, lịch sự nhờ khách làm rõ lại, ví dụ:
+\"Khách nói giúp em rõ hơn với ạ, để em hỗ trợ chính xác nhất nha.\"
+
+⚡️ Luôn chú ý cảm xúc của khách:
+- Nếu khách có vẻ vội, hãy trả lời thật nhanh.
+- Nếu khách thân thiện, hãy trả lời vui vẻ, thêm icon cảm xúc.
+- Nếu khách khó tính, trả lời thật rõ ràng, chuyên nghiệp.`;
+
+            const result = await model.generateContent({
+              contents: [
                 {
-                  inlineData: {
-                    mimeType: "image/jpeg",
-                    data: base64Image,
-                  },
-                },
-                {
-                  text: "Đây là ảnh một con chó hoặc mèo. Đoán giống và ước tính giá bán tại Shop. Trả lời ngắn gọn, dễ hiểu."
+                  parts: [
+                    { text: `${basePrompt}\n\nDưới đây là thông tin nội bộ cửa hàng:\n${noidung_txt}\n\nLời nhắn khách: ${textMessage}` }
+                  ]
                 }
-              ]);
-              const reply = result.response.text().trim();
-              await axios.post(`https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
-                recipient: { id: sender_psid },
-                messaging_type: "RESPONSE",
-                message: { text: reply },
-              });
-              console.log("✅ Đã trả lời ảnh thành công!");
-            } catch (err) {
-              console.error("❌ Lỗi xử lý ảnh:", err.message);
-            }
-            return;
+              ]
+            });
+
+            const reply = result.response.text().trim();
+            await axios.post(`https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
+              recipient: { id: sender_psid },
+              messaging_type: "RESPONSE",
+              message: { text: reply || "Mình nhận được rồi nha!" },
+            });
+            console.log("✅ Đã trả lời inbox thành công!");
+          } catch (err) {
+            console.error("❌ Lỗi trả lời inbox:", err.message);
           }
+        }
+      }
+
+      if (entry.changes) {
+        for (const change of entry.changes) {
+          const value = change.value;
+
+          if (
+            change.field === "feed" &&
+            value.item === "comment" &&
+            value.message &&
+            value.from?.id !== PAGE_ID &&
+            !repliedCommentIds.has(value.comment_id)
+          ) {
+            const userComment = value.message;
+            const commentId = value.comment_id;
+            console.log("💬 Nhận comment:", userComment);
+
+            try {
+              const result = await model.generateContent({
+                contents: [
+                  {
+                    parts: [
+                      {
+                        text: `Bạn là nhân viên fanpage Lộc Pet Bà Rịa. Hãy trả lời bình luận Facebook sau bằng tiếng Việt, tự nhiên, ngắn gọn, giống như người thật đang rep nhanh trên Facebook. Tránh lặp lại nội dung nội bộ, không trả lời giá cụ thể, không giải thích dài dòng. \n\nNội dung bình luận khách: \"${userComment}\"`
+                      }
+                    ]
+                  }
+                ]
+              });
+
+              const reply = result.response.text().trim();
+              await axios.post(`https://graph.facebook.com/v19.0/${commentId}/comments`, {
+                message: reply,
+                access_token: PAGE_ACCESS_TOKEN,
+              });
+              repliedCommentIds.add(commentId);
+              saveRepliedIds();
+              console.log("✅ Đã trả lời comment thành công!");
+            } catch (err) {
+              console.error("❌ Lỗi trả lời comment:", err.response?.data || err.message);
+            }
+          }
+        }
+      }
+    }
+    res.status(200).send("EVENT_RECEIVED");
+  } else {
+    res.sendStatus(404);
+  }
+});
 
 function getTodayFolder(buoi) {
   const now = new Date();
@@ -198,7 +229,7 @@ Ví dụ phong cách đúng:
 🐾 Chắc đang lên kế hoạch cho cuộc khám phá ngày mới đó!  
 😄 Bé ngoan quá trời luôn á!`;
 
-  const result = await modelText.generateContent({
+  const result = await model.generateContent({
     contents: [
       {
         parts: [ { text: prompt } ]
@@ -243,7 +274,7 @@ async function postVideo(videoUrl, caption) {
   }
 }
 
-cron.schedule("15 23 * * *", async () => {
+cron.schedule("15 22 * * *", async () => {
   const folder = getTodayFolder("sang");
   const images = await getImageUrls(folder);
   const first4 = images.slice(0, 4);
@@ -256,7 +287,7 @@ console.log("📢 Caption sáng:", caption);
   }
 });
 
-cron.schedule("15 4 * * *", async () => {
+cron.schedule("15 5 * * *", async () => {
   const folder = getTodayFolder("trua");
   const videoUrl = await getVideoUrl(folder);
   if (videoUrl) {
@@ -268,7 +299,7 @@ console.log("📢 Caption trưa:", caption);
   }
 });
 
-cron.schedule("30 10 * * *", async () => {
+cron.schedule("30 11 * * *", async () => {
   const folder = getTodayFolder("chieu");
   const images = await getImageUrls(folder);
   const first4 = images.slice(0, 4);
@@ -281,7 +312,7 @@ console.log("📢 Caption chiều:", caption);
   }
 });
 
-cron.schedule("30 13 * * *", async () => {
+cron.schedule("5 14 * * *", async () => {
   const folder = getTodayFolder("toi");
   const videoUrl = await getVideoUrl(folder);
   if (videoUrl) {
