@@ -99,6 +99,15 @@ app.post("/webhook", async (req, res) => {
           const attachments = webhook_event.message.attachments;
           if (!textMessage && attachments && attachments[0]?.type === "image") {
             const imageUrl = attachments[0].payload.url;
+
+            // ⏱️ Kiểm tra thời gian gửi ảnh, chỉ xử lý nếu ảnh mới gửi (trong 30 giây)
+            const timestamp = webhook_event.timestamp;
+            const now = Date.now();
+            if (!timestamp || now - timestamp > 30000) {
+              console.warn("⏱️ Ảnh cũ quá (gửi lại webhook), bỏ qua.");
+              return;
+            }
+
             const uniqueKey = `${sender_psid}_${imageUrl}`;
             if (repliedImageIds.has(uniqueKey)) {
               console.log("⚠️ Ảnh này từ người này đã được trả lời. Bỏ qua.");
@@ -118,7 +127,7 @@ app.post("/webhook", async (req, res) => {
                   },
                 },
                 {
-                  text: "Đây là ảnh một con chó hoặc mèo. Đoán giống và ước tính giá bán tại shop. Trả lời ngắn gọn, dễ hiểu."
+                  text: "Đây là ảnh một con chó hoặc mèo. Đoán giống và ước tính giá bán tại Shop. Trả lời ngắn gọn, dễ hiểu."
                 }
               ]);
               const reply = result.response.text().trim();
@@ -133,8 +142,6 @@ app.post("/webhook", async (req, res) => {
             }
             return;
           }
-
-
 
 function getTodayFolder(buoi) {
   const now = new Date();
