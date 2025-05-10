@@ -99,19 +99,14 @@ app.post("/webhook", async (req, res) => {
           const attachments = webhook_event.message.attachments;
           if (!textMessage && attachments && attachments[0]?.type === "image") {
             const imageUrl = attachments[0].payload.url;
-            const messageId = webhook_event.message?.mid;
-            if (!messageId) {
-              console.warn("⚠️ Không lấy được message ID. Bỏ qua.");
-              return;
-            }
-            const uniqueKey = `${sender_psid}_${messageId}`;
+            const uniqueKey = `${sender_psid}_${imageUrl}`;
             if (repliedImageIds.has(uniqueKey)) {
               console.log("⚠️ Ảnh này từ người này đã được trả lời. Bỏ qua.");
               return;
             }
             repliedImageIds.add(uniqueKey);
             saveRepliedImages();
-            console.log("📷 Nhận ảnh từ message ID:", messageId);
+            console.log("📷 Nhận ảnh từ URL:", imageUrl);
             try {
               const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
               const base64Image = Buffer.from(response.data, "binary").toString("base64");
@@ -138,74 +133,7 @@ app.post("/webhook", async (req, res) => {
             }
             return;
           }
-          if (textMessage) {
-            console.log("💬 Nhận inbox:", textMessage);
-            try {
-              const result = await model.generateContent({
-                contents: [
-                  {
-                    parts: [
-                      { text: `Bạn là nhân viên bán hàng fanpage. Hãy trả lời khách: ${textMessage}\n\nNội dung nội bộ:\n${noidung_txt}` }
-                    ]
-                  }
-                ]
-              });
-              const reply = result.response.text().trim();
-              await axios.post(`https://graph.facebook.com/v18.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
-                recipient: { id: sender_psid },
-                messaging_type: "RESPONSE",
-                message: { text: reply || "Mình nhận được rồi nha!" },
-              });
-              console.log("✅ Đã trả lời inbox thành công!");
-            } catch (err) {
-              console.error("❌ Lỗi trả lời inbox:", err.message);
-            }
-          }
-        }
-      }
-      if (entry.changes) {
-        for (const change of entry.changes) {
-          const value = change.value;
-          if (
-            change.field === "feed" &&
-            value.item === "comment" &&
-            value.message &&
-            value.from?.id !== PAGE_ID &&
-            !repliedCommentIds.has(value.comment_id)
-          ) {
-            const userComment = value.message;
-            const commentId = value.comment_id;
-            console.log("💬 Nhận comment:", userComment);
-            try {
-              const result = await model.generateContent({
-                contents: [
-                  {
-                    parts: [
-                      { text: `Trả lời bình luận khách sau: \"${userComment}\"` }
-                    ]
-                  }
-                ]
-              });
-              const reply = result.response.text().trim();
-              await axios.post(`https://graph.facebook.com/v19.0/${commentId}/comments`, {
-                message: reply,
-                access_token: PAGE_ACCESS_TOKEN,
-              });
-              repliedCommentIds.add(commentId);
-              saveRepliedIds();
-              console.log("✅ Đã trả lời comment thành công!");
-            } catch (err) {
-              console.error("❌ Lỗi trả lời comment:", err.response?.data || err.message);
-            }
-          }
-        }
-      }
-    }
-    res.status(200).send("EVENT_RECEIVED");
-  } else {
-    res.sendStatus(404);
-  }
-});
+
 
 
 function getTodayFolder(buoi) {
