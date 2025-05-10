@@ -103,7 +103,7 @@ app.post("/webhook", async (req, res) => {
             // ⏱️ Kiểm tra thời gian gửi ảnh, chỉ xử lý nếu ảnh mới gửi (trong 30 giây)
             const timestamp = webhook_event.timestamp;
             const now = Date.now();
-            if (!timestamp || now - timestamp > 30000) {
+            if (!timestamp || now - timestamp > 10000) {
               console.warn("⏱️ Ảnh cũ quá (gửi lại webhook), bỏ qua.");
               return;
             }
