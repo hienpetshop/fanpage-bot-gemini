@@ -18,8 +18,6 @@ app.get("/ping", (req, res) => {
   res.send("✅ Bot đang thức - ping thành công!");
 });
 
-// phần còn lại giữ nguyên ...
-
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -49,6 +47,24 @@ function saveRepliedIds() {
     fs.writeFileSync(repliedFile, JSON.stringify([...repliedCommentIds]), "utf8");
   } catch (err) {
     console.error("❌ Lỗi ghi replied.json:", err.message);
+  }
+}
+
+const repliedImageFile = path.join(__dirname, "replied_images.json");
+let repliedImageIds = new Set();
+if (fs.existsSync(repliedImageFile)) {
+  try {
+    const saved = JSON.parse(fs.readFileSync(repliedImageFile, "utf8"));
+    if (Array.isArray(saved)) repliedImageIds = new Set(saved);
+  } catch (err) {
+    console.error("❌ Lỗi đọc replied_images.json:", err.message);
+  }
+}
+function saveRepliedImages() {
+  try {
+    fs.writeFileSync(repliedImageFile, JSON.stringify([...repliedImageIds]), "utf8");
+  } catch (err) {
+    console.error("❌ Lỗi ghi replied_images.json:", err.message);
   }
 }
 
@@ -87,6 +103,15 @@ app.post("/webhook", async (req, res) => {
 
           if (!textMessage && attachments && attachments[0]?.type === "image") {
             const imageUrl = attachments[0].payload.url;
+            const messageId = webhook_event.message?.mid;
+
+            if (repliedImageIds.has(messageId)) {
+              console.log("⚠️ Ảnh đã được trả lời trước đó. Bỏ qua.");
+              return;
+            }
+            repliedImageIds.add(messageId);
+            saveRepliedImages();
+
             console.log("📷 Nhận ảnh:", imageUrl);
 
             try {
@@ -125,16 +150,13 @@ app.post("/webhook", async (req, res) => {
 
             try {
               const basePrompt = `Bạn là nhân viên bán hàng online của fanpage Lộc Pet Shop. Trả lời như đang chat Facebook: ngắn gọn, tự nhiên, thân thiện, đúng trọng tâm, không văn vở, không dùng \"Chào bạn!\" liên tục.
-
 ❌ Không hỏi kiểu: “bạn cần gì”, “shop có nhiều loại”, “xem chó hay mèo”, “hình vậy là sao”. Nếu không chắc chắn thì bỏ qua, không suy đoán.
 ✅ Nếu khách hỏi tư vấn cách chăm sóc chó/mèo, thì **trích nội dung quan trọng và tóm gọn đủ ý trong phần hướng dẫn chăm sóc** từ nội dung nội bộ (nếu có), không được nói chung chung.
 ✅ Nếu khách gửi ảnh chó/mèo: đoán giống, tư vấn giá, size, màu sắc nếu rõ thông tin.
 ✅ Nếu khách hỏi giá thì trả lời đúng theo thông tin.
 ➡ Nếu khách xin hình/video: luôn trả lời đúng câu này: \"Qua zalo: 0908 725270 xem giúp em, có chủ em gửi ảnh đẹp rõ nét liền ạ!\"
-
 🤝 Nếu không hiểu rõ ý khách, lịch sự nhờ khách làm rõ lại, ví dụ:
 \"Khách nói giúp em rõ hơn với ạ, để em hỗ trợ chính xác nhất nha.\"
-
 ⚡️ Luôn chú ý cảm xúc của khách:
 - Nếu khách có vẻ vội, hãy trả lời thật nhanh.
 - Nếu khách thân thiện, hãy trả lời vui vẻ, thêm icon cảm xúc.
@@ -181,12 +203,12 @@ app.post("/webhook", async (req, res) => {
             console.log("💬 Nhận comment:", userComment);
 
             try {
-              const result = await modelText.generateContent({
+              const result = await model.generateContent({
                 contents: [
                   {
                     parts: [
                       {
-                        text: `Bạn là nhân viên fanpage Lộc Pet Bà Rịa. Hãy trả lời bình luận Facebook sau bằng tiếng Việt, tự nhiên, ngắn gọn, giống như người thật đang rep nhanh trên Facebook. Tránh lặp lại nội dung nội bộ, không trả lời giá cụ thể, không giải thích dài dòng. \n\nNội dung bình luận khách: "${userComment}"`
+                        text: `Bạn là nhân viên fanpage Lộc Pet Bà Rịa. Hãy trả lời bình luận Facebook sau bằng tiếng Việt, tự nhiên, ngắn gọn, giống như người thật đang rep nhanh trên Facebook. Tránh lặp lại nội dung nội bộ, không trả lời giá cụ thể, không giải thích dài dòng. \n\nNội dung bình luận khách: \"${userComment}\"`
                       }
                     ]
                   }
